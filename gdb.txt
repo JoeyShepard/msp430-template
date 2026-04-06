@@ -1,0 +1,9 @@
+layout src
+layout regs
+break main
+break breakpoint
+commands
+step
+step
+end
+
