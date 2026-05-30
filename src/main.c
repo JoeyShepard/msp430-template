@@ -1,4 +1,7 @@
 #include <msp430.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include "asm.h"
 
 #define UART_RXD            BIT1  //P1.1
@@ -10,13 +13,17 @@
 #define PWM_OUT             BIT6  //P2.6
 
 //Function prototypes
-void delay_ms(int ms);
-int SetPWM(unsigned char freq);
-unsigned char SPI_Send(unsigned char data);
-void UART_Hex(unsigned char data);
-unsigned char UART_Receive();
-void UART_Send(unsigned char data);
+void delay_ms(int16_t ms);
+void SetPWM(uint8_t freq);
+uint8_t SPI_Send(uint8_t data);
+void UART_Hex(uint8_t data);
+uint8_t UART_Receive();
+void UART_Send(uint8_t data);
 void UART_Text(const char *data);
+void UART_CRLF();
+void UART_Space();
+void UART_uint16(uint16_t num);
+void UART_uint32(uint32_t num);
 
 int main(void)
 {
@@ -114,7 +121,7 @@ int main(void)
     while(1);
 }
 
-void delay_ms(int ms)
+void delay_ms(int16_t ms)
 {
     while (ms--) __delay_cycles(16000);
 }
@@ -126,17 +133,16 @@ void __interrupt_vec(PORT2_VECTOR) Port2_ISR(void)
     return;
 }
 
-int SetPWM(unsigned char freq)
+void SetPWM(uint8_t freq)
 {
     //TA0CTL=MC_0;            //Stop timer
     TA0CCR1=freq;           //New PWM value
     //TA0CTL=TASSEL_2+MC_1;   //Restart timer - main clock, up mode
-    return 0;
 }
 
-unsigned char SPI_Send(unsigned char data)
+uint8_t SPI_Send(uint8_t data)
 {
-    unsigned char buff;
+    uint8_t buff;
     while(!(UC0IFG&UCB0TXIFG));
     UCB0TXBUF=data;
     while (UCB0STAT & UCBUSY);
@@ -145,9 +151,9 @@ unsigned char SPI_Send(unsigned char data)
     return buff;
 }
 
-void UART_Hex(unsigned char data)
+void UART_Hex(uint8_t data)
 {
-    unsigned char buff;
+    uint8_t buff;
     buff=data/16;
     if (buff>9) buff+=55;
     else buff+='0';
@@ -158,13 +164,13 @@ void UART_Hex(unsigned char data)
     UART_Send(buff);
 }
 
-unsigned char UART_Receive()
+uint8_t UART_Receive()
 {
     while (!(UC0IFG&UCA0RXIFG));
     return UCA0RXBUF;
 }
 
-void UART_Send(unsigned char data)
+void UART_Send(uint8_t data)
 {
     while(!(UC0IFG&UCA0TXIFG));
     UCA0TXBUF=data;
@@ -174,8 +180,62 @@ void UART_Send(unsigned char data)
 
 void UART_Text(const char *data)
 {
-    int i=0;
-    while (data[i]) UART_Send(data[i++]);
+    while (*data) 
+    {
+        UART_Send(*data);
+        data++;
+    }
 }
 
+void UART_CRLF()
+{
+    UART_Text("\r\n");
+}
+
+void UART_Space()
+{
+    UART_Send(' ');
+}
+
+void UART_uint16(uint16_t num)
+{
+    if (num==0) UART_Text("0");
+    else
+    {
+        uint16_t divisor=10000;
+        bool printed=false;
+        while (divisor>0)
+        {
+            uint16_t digit=num/divisor;
+            num%=divisor;
+            if ((digit!=0)||(printed==true))
+            {
+                UART_Send('0'+digit);
+                printed=true;
+            }
+            divisor/=10;
+        }
+    }
+}
+
+void UART_uint32(uint32_t num)
+{
+    if (num==0) UART_Text("0");
+    else
+    {
+        uint32_t divisor=1000000000;
+        bool printed=false;
+        while (divisor>0)
+        {
+            uint32_t digit=num/divisor;
+            num%=divisor;
+            if ((digit!=0)||(printed==true))
+            {
+                UART_Send('0'+digit);
+                printed=true;
+            }
+            divisor/=10;
+        }
+    }
+}
 
