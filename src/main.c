@@ -5,27 +5,8 @@
 
 #include "asm.h"
 #include "main.h"
-
-#define UART_RXD            BIT1  //P1.1
-#define UART_TXD            BIT2  //P1.2
-#define IO_CLOCK            BIT5  //P1.5 
-#define IO_MISO             BIT6  //P1.6
-#define IO_MOSI             BIT7  //P1.7
-
-#define PWM_OUT             BIT6  //P2.6
-
-//Function prototypes
-void delay_ms(int16_t ms);
-void SetPWM(uint8_t freq);
-uint8_t SPI_Send(uint8_t data);
-void UART_Hex(uint8_t data);
-uint8_t UART_Receive();
-void UART_Send(uint8_t data);
-void UART_Text(const char *data);
-void UART_CRLF();
-void UART_Space();
-void UART_uint16(uint16_t num);
-void UART_uint32(uint32_t num);
+#include "msp430-lib.h"
+#include "pins.h"
 
 int main(void)
 {
@@ -34,7 +15,7 @@ int main(void)
     BCSCTL1=CALBC1_16MHZ;
     DCOCTL=CALDCO_16MHZ;
    
-    volatile int result=asm_test()+FOO;
+    volatile int result=asm_test();
 
     //P1OUT=;
     //P1DIR=;
@@ -123,121 +104,10 @@ int main(void)
     while(1);
 }
 
-void delay_ms(int16_t ms)
-{
-    while (ms--) __delay_cycles(16000);
-}
-
 void __interrupt_vec(PORT2_VECTOR) Port2_ISR(void)
 {
     //P2IFG&=~BUTTON;
     _low_power_mode_off_on_exit();
     return;
-}
-
-void SetPWM(uint8_t freq)
-{
-    //TA0CTL=MC_0;            //Stop timer
-    TA0CCR1=freq;           //New PWM value
-    //TA0CTL=TASSEL_2+MC_1;   //Restart timer - main clock, up mode
-}
-
-uint8_t SPI_Send(uint8_t data)
-{
-    uint8_t buff;
-    while(!(UC0IFG&UCB0TXIFG));
-    UCB0TXBUF=data;
-    while (UCB0STAT & UCBUSY);
-    
-    buff=UCB0RXBUF;
-    return buff;
-}
-
-void UART_Hex(uint8_t data)
-{
-    uint8_t buff;
-    buff=data/16;
-    if (buff>9) buff+=55;
-    else buff+='0';
-    UART_Send(buff);
-    buff=data%16;
-    if (buff>9) buff+=55;
-    else buff+='0';
-    UART_Send(buff);
-}
-
-uint8_t UART_Receive()
-{
-    while (!(UC0IFG&UCA0RXIFG));
-    return UCA0RXBUF;
-}
-
-void UART_Send(uint8_t data)
-{
-    while(!(UC0IFG&UCA0TXIFG));
-    UCA0TXBUF=data;
-    
-    while (UCA0STAT & UCBUSY);
-}
-
-void UART_Text(const char *data)
-{
-    while (*data) 
-    {
-        UART_Send(*data);
-        data++;
-    }
-}
-
-void UART_CRLF()
-{
-    UART_Text("\r\n");
-}
-
-void UART_Space()
-{
-    UART_Send(' ');
-}
-
-void UART_uint16(uint16_t num)
-{
-    if (num==0) UART_Text("0");
-    else
-    {
-        uint16_t divisor=10000;
-        bool printed=false;
-        while (divisor>0)
-        {
-            uint16_t digit=num/divisor;
-            num%=divisor;
-            if ((digit!=0)||(printed==true))
-            {
-                UART_Send('0'+digit);
-                printed=true;
-            }
-            divisor/=10;
-        }
-    }
-}
-
-void UART_uint32(uint32_t num)
-{
-    if (num==0) UART_Text("0");
-    else
-    {
-        uint32_t divisor=1000000000;
-        bool printed=false;
-        while (divisor>0)
-        {
-            uint32_t digit=num/divisor;
-            num%=divisor;
-            if ((digit!=0)||(printed==true))
-            {
-                UART_Send('0'+digit);
-                printed=true;
-            }
-            divisor/=10;
-        }
-    }
 }
 
