@@ -2,7 +2,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include "asm.h"
+#include "main.h"
 
 #define UART_RXD            BIT1  //P1.1
 #define UART_TXD            BIT2  //P1.2
@@ -32,7 +34,7 @@ int main(void)
     BCSCTL1=CALBC1_16MHZ;
     DCOCTL=CALDCO_16MHZ;
    
-    volatile int result=asm_test();
+    volatile int result=asm_test()+FOO;
 
     //P1OUT=;
     //P1DIR=;

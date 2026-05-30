@@ -20,8 +20,8 @@ OBJCOPY = $(GCC_DIR)/msp430-elf-objcopy
 #l - include assembly
 #n - omit forms processing
 #s - include symbols
-ASFLAGS = -I $(SUPPORT_FILE_DIRECTORY) -mmcu=$(DEVICE) -g -aghlns=$(BUILD_DIR)/$(notdir $<.lst)
-CFLAGS = -I $(SUPPORT_FILE_DIRECTORY) -mmcu=$(DEVICE) -O2 -Wall -g -Wa,-aghlns=$(BUILD_DIR)/$(notdir $<.lst)
+ASFLAGS = -I $(SUPPORT_FILE_DIRECTORY) -Iinclude -mmcu=$(DEVICE) -g -aghlns=$(BUILD_DIR)/$(notdir $<.lst)
+CFLAGS = -I $(SUPPORT_FILE_DIRECTORY) -Iinclude -mmcu=$(DEVICE) -O2 -Wall -g -Wa,-aghlns=$(BUILD_DIR)/$(notdir $<.lst)
 #Recompile if file includes header that changed
 CFLAGS += -MMD -MP
 LFLAGS = -L $(SUPPORT_FILE_DIRECTORY) -Wl,-Map,$(MAP),--gc-sections 
