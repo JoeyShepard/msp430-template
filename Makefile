@@ -56,7 +56,9 @@ sim: all
 
 debug: all
 	sudo -v
-	sudo mspdebug tilib "prog $(BUILD_DIR)/$(PROJECT).out" "opt quiet true" gdb > /dev/null &
+	sudo mspdebug tilib "prog $(BUILD_DIR)/$(PROJECT).out" "opt quiet true" gdb
+
+connect: all
 	$(GDB) --se $(BUILD_DIR)/$(PROJECT).out $(GDBFLAGS) --ex "target remote localhost:2000" --ex continue
 
 flash: all

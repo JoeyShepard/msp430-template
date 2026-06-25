@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #include "asm.h"
+#include "common.h"
 #include "main.h"
-#include "msp430-lib.h"
 #include "pins.h"
 
 int main(void)
